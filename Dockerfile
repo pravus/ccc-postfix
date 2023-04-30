@@ -20,9 +20,8 @@ FROM alpine:3
 ENV ENV=/root/.ashrc
 
 RUN apk --no-cache update \
- && apk --no-cache upgrade
-
-RUN apk --no-cache add ca-certificates opendkim opendkim-utils postfix spamassassin spamassassin-client
+ && apk --no-cache upgrade \
+ && apk --no-cache add ca-certificates dovecot opendkim opendkim-utils postfix spamassassin spamassassin-client
 
 COPY --from=procmail-builder /usr/src/procmail-3.22/src/formail /usr/sbin
 COPY --from=procmail-builder /usr/src/procmail-3.22/src/mailstat /usr/sbin

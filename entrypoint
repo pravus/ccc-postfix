@@ -1,12 +1,18 @@
 #!/bin/sh
 
+# syslog
 /sbin/syslogd -nO- &
 
-[[ -z "${POSTFIX_MYHOSTNAME}" ]] && {
-  echo "FATAL: environment variable POSTFIX_MYHOSTNAME is not set"
-  exit 1
-}
+# dovecot
+sed -i -e '/^#disable_plaintext_auth =/a disable_plaintext_auth = no' /etc/dovecot/conf.d/10-auth.conf
+sed -i -e '/^#auth_verbose =/a auth_verbose = yes' /etc/dovecot/conf.d/10-logging.conf
+sed -i -e '/^#mail_location =/a mail_location = maildir:~/Maildir' /etc/dovecot/conf.d/10-mail.conf
+sed -i -e 's/^ssl = required$/ssl = no/' /etc/dovecot/conf.d/10-ssl.conf
 
+/usr/sbin/dovecot
+
+# postfix + opendkim
+[[ -z "${POSTFIX_MYHOSTNAME}" ]] && export POSTFIX_MYHOSTNAME="${HOSTNAME}"
 cat <<EOT >>/etc/postfix/main.cf
 smtp_tls_security_level = may
 myhostname = ${POSTFIX_MYHOSTNAME}
