@@ -20,7 +20,7 @@ FROM alpine:3
 RUN apk --no-cache update \
  && apk --no-cache upgrade
 
-RUN apk --no-cache add postfix spamassassin spamassassin-client
+RUN apk --no-cache add opendkim opendkim-utils postfix spamassassin spamassassin-client
 
 COPY --from=procmail-builder /usr/src/procmail-3.22/src/formail /usr/sbin
 COPY --from=procmail-builder /usr/src/procmail-3.22/src/mailstat /usr/sbin

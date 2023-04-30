@@ -4,6 +4,7 @@
   echo "FATAL: environment variable POSTFIX_MYHOSTNAME is not set"
   exit 1
 }
+
 cat <<EOT >>/etc/postfix/main.cf
 myhostname = ${POSTFIX_MYHOSTNAME}
 mydestination = \$mydomain
@@ -35,9 +36,20 @@ EOT
 
 newaliases
 
+[[ "${WITH_OPENDKIM}" == "true" ]] && {
+  __domain=$(echo "${POSTFIX_MYHOSTNAME}" | sed -e 's/^[^.]*\.//')
+  mkdir -p /run/opendkim
+  sed -i -e "s/example.com/${__domain}/" /etc/opendkim/opendkim.conf
+  (
+    echo "smtpd_milters = inet:127.0.0.1:8891"
+    echo "non_smtpd_milters = $smtpd_milters milter_default_action = accept"
+  ) >>/etc/postfix/main.cf
+}
+
 [[ "${WITH_SPAMASSASSIN}" == "true" ]] && {
   /usr/bin/sa-update
   /usr/sbin/spamd --daemonize
 }
 
+/usr/sbin/opendkim
 /usr/sbin/postfix start-fg
