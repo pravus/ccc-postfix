@@ -1,0 +1,3 @@
+alias l='/bin/ls -Al'
+
+set -o vi

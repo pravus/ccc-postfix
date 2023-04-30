@@ -1,12 +1,13 @@
 #!/bin/sh
 
+/sbin/syslogd -nO- &
+
 [[ -z "${POSTFIX_MYHOSTNAME}" ]] && {
   echo "FATAL: environment variable POSTFIX_MYHOSTNAME is not set"
   exit 1
 }
 
 cat <<EOT >>/etc/postfix/main.cf
-maillog_file=/dev/stdout
 myhostname = ${POSTFIX_MYHOSTNAME}
 mydestination = \$mydomain
 home_mailbox = Maildir/

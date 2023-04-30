@@ -17,6 +17,8 @@ RUN tar xzvf procmail-3.22.tar.gz \
 
 FROM alpine:3
 
+ENV ENV=/root/.ashrc
+
 RUN apk --no-cache update \
  && apk --no-cache upgrade
 
@@ -28,5 +30,6 @@ COPY --from=procmail-builder /usr/src/procmail-3.22/src/procmail /usr/sbin
 COPY --from=procmail-builder /usr/src/procmail-3.22/src/setid /usr/sbin
 
 COPY entrypoint /
+COPY root /root
 
 ENTRYPOINT ["/entrypoint"]
