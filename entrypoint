@@ -14,7 +14,7 @@ mailbox_command = /usr/sbin/procmail
 EOT
 
 [[ -n "${POSTFIX_MYNETWORKS}" ]] && {
-  echo "mynetworks = 127.0.0.1/8 ${POSTFIX_MYNETWORKS}" >>/etc/postfix/main.cf
+  echo "mynetworks = 127.0.0.0/8 ${POSTFIX_MYNETWORKS}" >>/etc/postfix/main.cf
 }
 
 cat <<EOT >/etc/postfix/aliases
