@@ -6,6 +6,7 @@
 }
 
 cat <<EOT >>/etc/postfix/main.cf
+maillog_file=/dev/stdout
 myhostname = ${POSTFIX_MYHOSTNAME}
 mydestination = \$mydomain
 home_mailbox = Maildir/
