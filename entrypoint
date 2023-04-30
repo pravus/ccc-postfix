@@ -1,0 +1,43 @@
+#!/bin/sh
+
+[[ -z "${POSTFIX_MYHOSTNAME}" ]] && {
+  echo "FATAL: environment variable POSTFIX_MYHOSTNAME is not set"
+  exit 1
+}
+cat <<EOT >>/etc/postfix/main.cf
+myhostname = ${POSTFIX_MYHOSTNAME}
+mydestination = \$mydomain
+home_mailbox = Maildir/
+mailbox_command = /usr/sbin/procmail
+EOT
+
+cat <<EOT >/etc/postfix/aliases
+MAILER-DAEMON: postmaster
+postmaster: root
+abuse: root
+EOT
+
+(
+  cd /home
+  find . -maxdepth 1 | while read entry; do
+    entry="${entry/\.\//}"
+    [[ "$entry" == '.' || "$entry" == '..' ]] && continue
+    case $(stat -c '%F' "$entry") in
+    'directory')
+      adduser -h /home/"$entry" -s /sbin/nologin -u "$(stat -c '%u' "$entry")" -G users -D "$entry"
+      ;;
+    'symbolic link')
+      echo "${entry}: "$(readlink "${entry}") >> /etc/postfix/aliases
+      ;;
+    esac
+  done
+)
+
+newaliases
+
+[[ "${WITH_SPAMASSASSIN}" == "true" ]] && {
+  /usr/bin/sa-update
+  /usr/sbin/spamd --daemonize
+}
+
+/usr/sbin/postfix start-fg

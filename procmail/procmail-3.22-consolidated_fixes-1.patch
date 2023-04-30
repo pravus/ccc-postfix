@@ -1,0 +1,182 @@
+Submitted By: Ken Moffat <ken at linuxfromscratch dot org>
+Date: 2018-02-10
+Initial Package Version: 3.22
+Upstream Status: Defunct
+Origin: Found at fedora, some are originally from debian.
+Description: After noticing Arch had picked up a CVE fix from debian,
+I looked at what distros are doing. Fedora have several patches of
+apparent relevance:
+ procmail-3.22-truncate.patch
+ procmail-3.22-CVE-2014-3618.patch
+ procmail-3.22-crash-fix.patch (buffer overflows, memory corruption)
+ procmail-3.22-loadbuf_fix.patch (CVE-2017-16844).
+They also have a consolidated patch from debian_3.22-8, but that
+includes many things which do not appear to be problem fixes. I then
+took a look at debian's procmail_3.22-26 patches and selected the
+following items which are within fedora's debian patch (unfortunately
+the patch names are just numbers):
+ 10 (segfault in mailfold.c)
+ 14 http://bugs.debian.org/171514 allocate wrong amount of memory in a pipe
+ 17 http://bugs.debian.org/217853  - formail prints body if content length
+  header is found
+
+diff -Naur a/src/cstdio.c b/src/cstdio.c
+--- a/src/cstdio.c	2000-12-31 06:08:20.000000000 +0000
++++ b/src/cstdio.c	2018-02-09 03:01:55.445270475 +0000
+@@ -144,7 +144,7 @@
+       { case '\n':case EOF:*q='\0';
+ 	   return overflow?-1:p!=q;	     /* did we read anything at all? */
+       }
+-     if(q==end)	    /* check here so that a trailing backslash won't be lost */
++     if(q>=end)	    /* check here so that a trailing backslash won't be lost */
+ 	q=p,overflow=1;
+      *q++=i;
+    }
+@@ -199,7 +199,7 @@
+ 	   if(*(target=strchr(target,'\0')-1)=='\\')
+ 	    { if(chp2!=target)				  /* non-empty line? */
+ 		 target++;		      /* then preserve the backslash */
+-	      if(target>end-2)			  /* space enough for getbl? */
++	      if(target>=end-2)			  /* space enough for getbl? */
+ 		 target=end-linebuf,overflow=1;		/* toss what we have */
+ 	      continue;
+ 	    }
+diff -Naur a/src/formail.c b/src/formail.c
+--- a/src/formail.c	2001-09-11 05:57:32.000000000 +0100
++++ b/src/formail.c	2018-02-09 03:13:54.650374132 +0000
+@@ -219,7 +219,8 @@
+   if(i>=0&&(i!=maxindex(sest)||fldp==rdheader))		  /* found anything? */
+    { char*saddr;char*tmp;			     /* determine the weight */
+      nowm=areply&&headreply?headreply==1?sest[i].wrepl:sest[i].wrrepl:i;chp+=j;
+-     tmp=malloc(j=fldp->Tot_len-j);tmemmove(tmp,chp,j);(chp=tmp)[j-1]='\0';
++     tmp=malloc((j=fldp->Tot_len-j) + 1);tmemmove(tmp,chp,j);(chp=tmp)[j-1]='\0';
++     chp[j]='\0';
+      if(sest[i].head==From_)
+       { char*pastad;
+ 	if(strchr(saddr=chp,'\n'))		     /* multiple From_ lines */
+@@ -364,7 +365,7 @@
+ 
+ int main(lastm,argv)int lastm;const char*const argv[];
+ { int i,split=0,force=0,bogus=1,every=0,headreply=0,digest=0,nowait=0,keepb=0,
+-   minfields=(char*)progid-(char*)progid,conctenate=0,babyl=0,babylstart,
++   minfields=(char*)progid-(char*)progid,conctenate=0,babyl=0,babylstart=0,
+    berkeley=0,forgetclen;
+   long maxlen,ctlength;FILE*idcache=0;pid_t thepid;
+   size_t j,lnl,escaplen;char*chp,*namep,*escap=ESCAP;
+@@ -758,9 +759,9 @@
+ 	lputssn(buf,buffilled),ctlength-=buffilled,buffilled=lnl=0;
+      ;{ int tbl=buflast,lwr='\n';
+ 	while(--ctlength>=0&&tbl!=EOF)	       /* skip Content-Length: bytes */
+-	   lnl=lwr==tbl&&lwr=='\n',putcs(lwr=tbl),tbl=getchar();
++	   lnl=lwr==tbl&&lwr=='\n',lputcs(lwr=tbl),tbl=getchar();
+ 	if((buflast=tbl)=='\n'&&lwr!=tbl)	/* just before a line break? */
+-	   putcs('\n'),buflast=getchar();		/* wrap up loose end */
++	   lputcs('\n'),buflast=getchar();		/* wrap up loose end */
+       }
+      if(!quiet&&ctlength>0)
+       { charNUM(num,ctlength);
+diff -Naur a/src/formisc.c b/src/formisc.c
+--- a/src/formisc.c	2001-06-29 03:20:45.000000000 +0100
++++ b/src/formisc.c	2018-02-09 03:03:48.643338792 +0000
+@@ -66,7 +66,7 @@
+ retz:	      *target='\0';
+ ret:	      return start;
+ 	    }
+-	   if(*start=='\\')
++	   if(*start=='\\' && *(start + 1))
+ 	      *target++='\\',start++;
+ 	   hitspc=2;
+ 	   goto normal;					      /* normal word */
+@@ -84,12 +84,11 @@
+ 	case '"':*target++=delim='"';start++;
+       }
+      ;{ int i;
+-	do
++	while(*start)						/* anything? */
+ 	   if((i= *target++= *start++)==delim)	 /* corresponding delimiter? */
+ 	      break;
+ 	   else if(i=='\\'&&*start)		    /* skip quoted character */
+ 	      *target++= *start++;
+-	while(*start);						/* anything? */
+       }
+      hitspc=2;
+    }
+@@ -104,7 +103,7 @@
+ }
+ 							    /* append to buf */
+ void loadbuf(text,len)const char*const text;const size_t len;
+-{ if(buffilled+len>buflen)			  /* buf can't hold the text */
++{ while(buffilled+len>buflen)			  /* buf can't hold the text */
+      buf=realloc(buf,buflen+=Bsize);
+   tmemmove(buf+buffilled,text,len);buffilled+=len;
+ }
+diff -Naur a/src/mailfold.c b/src/mailfold.c
+--- a/src/mailfold.c	2001-09-11 05:58:34.000000000 +0100
++++ b/src/mailfold.c	2018-02-09 03:13:29.705919868 +0000
+@@ -30,6 +30,7 @@
+ 
+ int logopened,rawnonl;
+ off_t lasttell;
++static int trunced;
+ static long lastdump;
+ static volatile int mailread;	/* if the mail is completely read in already */
+ static struct dyna_array confield;		  /* escapes, concatenations */
+@@ -81,6 +82,7 @@
+  long len;
+ { int i;long part;
+   lasttell=i= -1;SETerrno(EBADF);
++  trunced=0;
+   if(s>=0)
+    { if(ft_lock(type)&&(lseek(s,(off_t)0,SEEK_END),fdlock(s)))
+ 	nlog("Kernel-lock failed\n");
+@@ -120,13 +122,18 @@
+       }
+ writefin:
+      i=type!=ft_PIPE&&fsync(s)&&errno!=EINVAL;	  /* EINVAL => wasn't a file */
++     if ((i||len)&&lasttell>=0)
++      { int serrno=errno;
++	if(!ftruncate(s,lasttell)) trunced=1;
++	SETerrno(serrno);
++      }
+      if(ft_lock(type))
+       { int serrno=errno;		       /* save any error information */
+ 	if(fdunlock())
+ 	   nlog("Kernel-unlock failed\n");
+ 	SETerrno(serrno);
+       }
+-     i=rclose(s)||i;
++     i=rclose(s)||i; /* if this fails, we should truncate, but it's too late */
+    }			   /* return an error even if nothing was to be sent */
+   return i&&!len?-1:len;
+ }
+@@ -237,7 +244,7 @@
+ #endif
+ 	      default:writeerr(buf);
+ 	    }
+-	   if(lasttell>=0&&!truncate(boxname,lasttell)&&(logopened||verbose))
++	   if(lasttell>=0&&trunced&&(logopened||verbose))
+ 	      nlog("Truncated file to former size\n");	    /* undo garbage */
+ ret0:	   return 0;
+ 	 }
+@@ -378,7 +385,8 @@
+ 	dfilled=mailread=0;
+      else if(rhead)				/* only read in a new header */
+       { memblk new;
+-	dfilled=mailread=0;makeblock(&new,0);readdyn(&new,&dfilled,0);
++	dfilled=mailread=0;makeblock(&new,0);
++	readdyn(&new,&dfilled,thebody-themail.p);
+ 	if(tobesent>dfilled&&isprivate)		     /* put it in place here */
+ 	 { tmemmove(themail.p+dfilled,thebody,filled-=tobesent);
+ 	   tmemmove(themail.p,new.p,dfilled);
+diff -Naur a/src/pipes.c b/src/pipes.c
+--- a/src/pipes.c	2001-09-11 05:58:44.000000000 +0100
++++ b/src/pipes.c	2018-02-09 03:13:43.654173861 +0000
+@@ -194,7 +194,7 @@
+      makeblock(&temp,Stdfilled);
+      tmemmove(temp.p,Stdout,Stdfilled);
+      readdyn(&temp,&Stdfilled,Stdfilled+backlen+1);
+-     Stdout=realloc(Stdout,&Stdfilled+1);
++     Stdout=realloc(Stdout,Stdfilled+1);
+      tmemmove(Stdout,temp.p,Stdfilled+1);
+      freeblock(&temp);
+      retStdout(Stdout,pwait&&pipw,!backblock);
