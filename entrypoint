@@ -9,8 +9,8 @@ sed -i -e '/^#auth_verbose =/a auth_verbose = yes' /etc/dovecot/conf.d/10-loggin
 sed -i -e '/^#mail_location =/a mail_location = maildir:~/Maildir' /etc/dovecot/conf.d/10-mail.conf
 if [[ -d '/etc/ssl/vmail' ]]; then
   sed -i \
-    -e 's#^ssl_cert = </etc/ssl/dovecot/server.pem$#/etc/ssl/vmail/cert.pem#' \
-    -e 's#^ssl_key = </etc/ssl/dovecot/server.key$#/etc/ssl/vmail/key.pem#' \
+    -e 's#^ssl_cert = </etc/ssl/dovecot/server.pem$#ssl_cert = </etc/ssl/vmail/cert.pem#' \
+    -e 's#^ssl_key = </etc/ssl/dovecot/server.key$#ssl_key = </etc/ssl/vmail/key.pem#' \
     /etc/dovecot/conf.d/10-ssl.conf
 else
   sed -i -e 's/^ssl = required$/ssl = no/' /etc/dovecot/conf.d/10-ssl.conf
