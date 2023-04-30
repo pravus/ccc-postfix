@@ -21,8 +21,8 @@ EOT
 [[ -d '/etc/ssl/postfix' ]] && cat <<EOT >>/etc/postfix/main.cf
 smtpd_tls_security_level = may
 smtpd_use_tls = yes
-smtpd_tls_cert_file = /etc/ssl/postfix/fullchain.pem
-smtpd_tls_key_file = /etc/ssl/postfix/privkey.pem
+smtpd_tls_cert_file = /etc/ssl/postfix/cert.pem
+smtpd_tls_key_file = /etc/ssl/postfix/key.pem
 EOT
 [[ -d '/etc/ssl/postfix' ]] && sed -i \
   -e 's/^#\(  -o syslog_name=\)/\1/' \
