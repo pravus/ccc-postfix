@@ -18,6 +18,24 @@ EOT
   echo "mynetworks = 127.0.0.0/8 ${POSTFIX_MYNETWORKS}" >>/etc/postfix/main.cf
 }
 
+[[ -d '/etc/ssl/postfix' ]] && cat <<EOT >>/etc/postfix/main.cf
+smtpd_tls_security_level = may
+smtpd_use_tls = yes
+smtpd_tls_cert_file = /etc/ssl/postfix/fullchain.pem
+smtpd_tls_key_file = /etc/ssl/postfix/privkey.pem
+EOT
+[[ -d '/etc/ssl/postfix' ]] && sed -i \
+  -e 's/^#\(  -o syslog_name=\)/\1/' \
+  -e 's/^#\(  -o smtpd_tls_security_level=\)/\1/' \
+  -e 's/^#\(  -o smtpd_sasl_auth_enable=\)/\1/' \
+  -e 's/^#\(  -o smtpd_tls_auth_only=\)/\1/' \
+  -e 's/^#\(  -o smtpd_reject_unlisted_recipient=\)/\1/' \
+  -e 's/^#\(  -o smtpd_recipient_restrictions=\)/\1/' \
+  -e 's/^#\(  -o smtpd_relay_restrictions=\)/\1/' \
+  -e 's/^#\(  -o milter_macro_daemon_name=\)/\1/' \
+  -e 's/^#\(  -o smtpd_tls_wrappermode=\)/\1/' \
+  /etc/postfix/master.cf
+
 cat <<EOT >/etc/postfix/aliases
 MAILER-DAEMON: postmaster
 postmaster: root
