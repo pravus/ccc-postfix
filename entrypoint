@@ -8,6 +8,7 @@
 }
 
 cat <<EOT >>/etc/postfix/main.cf
+smtp_tls_security_level = may
 myhostname = ${POSTFIX_MYHOSTNAME}
 mydestination = \$mydomain
 home_mailbox = Maildir/
@@ -25,6 +26,8 @@ smtpd_tls_cert_file = /etc/ssl/postfix/cert.pem
 smtpd_tls_key_file = /etc/ssl/postfix/key.pem
 EOT
 [[ -d '/etc/ssl/postfix' ]] && sed -i \
+  -e 's/^#\(submission\)/\1/' \
+  -e 's/^#\(#smtps\)/\1/' \
   -e 's/^#\(  -o syslog_name=\)/\1/' \
   -e 's/^#\(  -o smtpd_tls_security_level=\)/\1/' \
   -e 's/^#\(  -o smtpd_sasl_auth_enable=\)/\1/' \
