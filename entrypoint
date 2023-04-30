@@ -7,7 +7,14 @@
 sed -i -e '/^#disable_plaintext_auth =/a disable_plaintext_auth = no' /etc/dovecot/conf.d/10-auth.conf
 sed -i -e '/^#auth_verbose =/a auth_verbose = yes' /etc/dovecot/conf.d/10-logging.conf
 sed -i -e '/^#mail_location =/a mail_location = maildir:~/Maildir' /etc/dovecot/conf.d/10-mail.conf
-sed -i -e 's/^ssl = required$/ssl = no/' /etc/dovecot/conf.d/10-ssl.conf
+if [[ -d '/etc/ssl/vmail' ]]; then
+  sed -i \
+    -e 's#^ssl_cert = </etc/ssl/dovecot/server.pem$#/etc/ssl/vmail/cert.pem#' \
+    -e 's#^ssl_key = </etc/ssl/dovecot/server.key$#/etc/ssl/vmail/key.pem#' \
+    /etc/dovecot/conf.d/10-ssl.conf
+else
+  sed -i -e 's/^ssl = required$/ssl = no/' /etc/dovecot/conf.d/10-ssl.conf
+fi
 
 /usr/sbin/dovecot
 
@@ -25,11 +32,11 @@ EOT
   echo "mynetworks = 127.0.0.0/8 ${POSTFIX_MYNETWORKS}" >>/etc/postfix/main.cf
 }
 
-[[ -d '/etc/ssl/postfix' ]] && cat <<EOT >>/etc/postfix/main.cf
+[[ -d '/etc/ssl/vmail' ]] && cat <<EOT >>/etc/postfix/main.cf
 smtpd_tls_security_level = may
 smtpd_use_tls = yes
-smtpd_tls_cert_file = /etc/ssl/postfix/cert.pem
-smtpd_tls_key_file = /etc/ssl/postfix/key.pem
+smtpd_tls_cert_file = /etc/ssl/vmail/cert.pem
+smtpd_tls_key_file = /etc/ssl/vmail/key.pem
 EOT
 [[ -d '/etc/ssl/postfix' ]] && sed -i \
   -e 's/^#\(submission\)/\1/' \
