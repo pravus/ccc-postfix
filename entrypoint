@@ -12,6 +12,10 @@ home_mailbox = Maildir/
 mailbox_command = /usr/sbin/procmail
 EOT
 
+[[ -n "${POSTFIX_MYNETWORKS}" ]] && {
+  echo "mynetworks = ${POSTFIX_MYNETWORKS}" >>/etc/postfix/main.cf
+}
+
 cat <<EOT >/etc/postfix/aliases
 MAILER-DAEMON: postmaster
 postmaster: root
