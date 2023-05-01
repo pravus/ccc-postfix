@@ -11,7 +11,7 @@ sed -i \
 sed -i -e '/^#auth_verbose =/a auth_verbose = yes' /etc/dovecot/conf.d/10-logging.conf
 sed -i -e '/^#mail_location =/a mail_location = maildir:~/Maildir' /etc/dovecot/conf.d/10-mail.conf
 sed -i \
-  -e '/# Postfix smtp-auth/a \  unix_listener /var/spool/postfix/private/auth {\n    mode = 0660\n    user = postfix\n    group = postfix\n  }'
+  -e '/# Postfix smtp-auth/a \  unix_listener /var/spool/postfix/private/auth {\n    mode = 0660\n    user = postfix\n    group = postfix\n  }' \
   /etc/dovecot/conf.d/10-master.conf
 if [[ -d '/etc/ssl/vmail' ]]; then
   sed -i \
