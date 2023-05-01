@@ -26,17 +26,24 @@ fi
 
 # postfix + opendkim
 [[ -z "${POSTFIX_MYHOSTNAME}" ]] && export POSTFIX_MYHOSTNAME="${HOSTNAME}"
+[[ -z "${POSTFIX_MYDOMAIN}" ]] && export POSTFIX_MYDOMAIN=$(echo "${POSTFIX_MYHOSTNAME}" | sed -e 's/^[^.]*\.//')
+
 cat <<EOT >>/etc/postfix/main.cf
-smtp_tls_security_level = may
 myhostname = ${POSTFIX_MYHOSTNAME}
-mydestination = \$mydomain
+mydomain = ${POSTFIX_MYDOMAIN}
+myorigin = \$mydomain
+mydestination = $myhostname localhost.$mydomain localhost $mydomain
+EOT
+if [[ -n "${POSTFIX_MYNETWORKS}" ]]; then
+  echo "mynetworks = 127.0.0.0/8 ${POSTFIX_MYNETWORKS}" >>/etc/postfix/main.cf
+else
+  echo "mynetworks = 127.0.0.0/8" >>/etc/postfix/main.cf
+fi
+cat <<EOT >>/etc/postfix/main.cf
 home_mailbox = Maildir/
 mailbox_command = /usr/sbin/procmail
+smtp_tls_security_level = may
 EOT
-
-[[ -n "${POSTFIX_MYNETWORKS}" ]] && {
-  echo "mynetworks = 127.0.0.0/8 ${POSTFIX_MYNETWORKS}" >>/etc/postfix/main.cf
-}
 
 [[ -d '/etc/ssl/vmail' ]] && cat <<EOT >>/etc/postfix/main.cf
 smtpd_tls_security_level = may
@@ -90,9 +97,8 @@ EOT
 newaliases
 
 [[ "${WITH_OPENDKIM}" == "true" ]] && {
-  __domain=$(echo "${POSTFIX_MYHOSTNAME}" | sed -e 's/^[^.]*\.//')
   mkdir -p /run/opendkim
-  sed -i -e "s/example.com/${__domain}/" /etc/opendkim/opendkim.conf
+  sed -i -e "s/example.com/${POSTFIX_MYDOMAIN}/" /etc/opendkim/opendkim.conf
   echo "InternalHosts ${POSTFIX_MYNETWORKS}" >>/etc/opendkim/opendkim.conf
   (
     echo "smtpd_milters = inet:127.0.0.1:8891"
