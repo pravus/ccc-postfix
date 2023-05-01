@@ -32,7 +32,7 @@ cat <<EOT >>/etc/postfix/main.cf
 myhostname = ${POSTFIX_MYHOSTNAME}
 mydomain = ${POSTFIX_MYDOMAIN}
 myorigin = \$mydomain
-mydestination = $myhostname localhost.$mydomain localhost $mydomain
+mydestination = \$myhostname localhost.\$mydomain localhost \$mydomain
 EOT
 if [[ -n "${POSTFIX_MYNETWORKS}" ]]; then
   echo "mynetworks = 127.0.0.0/8 ${POSTFIX_MYNETWORKS}" >>/etc/postfix/main.cf
