@@ -45,6 +45,9 @@ mailbox_command = /usr/sbin/procmail
 smtp_tls_security_level = may
 EOT
 
+__smtpd_relay_restrictions="permit_sasl_authenticated reject_unauth_destination"
+[[ "${POSTFIX_PERMIT_MYNETWORKS}" == "true" ]] && __smtpd_relay_restrictions="permit_mynetworks ${__smtpd_relay_restrictions}"
+
 [[ -d '/etc/ssl/vmail' ]] && cat <<EOT >>/etc/postfix/main.cf
 smtpd_tls_security_level = may
 smtpd_use_tls = yes
@@ -56,8 +59,9 @@ smtpd_sasl_auth_enable = yes
 smtpd_sasl_security_options = noanonymous, noplaintext
 smtpd_sasl_tls_security_options = noanonymous
 smtpd_tls_auth_only = yes
-smtpd_relay_restrictions = permit_mynetworks permit_sasl_authenticated reject_unauth_destination
+smtpd_relay_restrictions = ${__smtpd_relay_restrictions}
 EOT
+unset __smtpd_relay_restrictions
 [[ -d '/etc/ssl/postfix' ]] && sed -i \
   -e 's/^#\(submission\)/\1/' \
   -e 's/^#\(smtps\)/\1/' \
