@@ -24,7 +24,7 @@ fi
 
 /usr/sbin/dovecot
 
-# postfix + opendkim
+# postfix
 [[ -z "${POSTFIX_MYHOSTNAME}" ]] && export POSTFIX_MYHOSTNAME="${HOSTNAME}"
 [[ -z "${POSTFIX_MYDOMAIN}" ]] && export POSTFIX_MYDOMAIN=$(echo "${POSTFIX_MYHOSTNAME}" | sed -e 's/^[^.]*\.//')
 
@@ -100,6 +100,7 @@ EOT
 
 newaliases
 
+# opendkim
 [[ "${WITH_OPENDKIM}" == "true" ]] && {
   mkdir -p /run/opendkim
   sed -i -e "s/example.com/${POSTFIX_MYDOMAIN}/" /etc/opendkim/opendkim.conf
@@ -108,12 +109,14 @@ newaliases
     echo "smtpd_milters = inet:127.0.0.1:8891"
     echo "non_smtpd_milters = $smtpd_milters milter_default_action = accept"
   ) >>/etc/postfix/main.cf
+  /usr/sbin/opendkim
 }
 
+# spamassassin
 [[ "${WITH_SPAMASSASSIN}" == "true" ]] && {
   /usr/bin/sa-update
   /usr/sbin/spamd --daemonize
 }
 
-/usr/sbin/opendkim
+# let's mail
 exec /usr/sbin/postfix start-fg
