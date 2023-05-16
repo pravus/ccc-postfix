@@ -116,4 +116,4 @@ newaliases
 }
 
 /usr/sbin/opendkim
-/usr/sbin/postfix start-fg
+exec /usr/sbin/postfix start-fg
