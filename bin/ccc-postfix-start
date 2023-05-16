@@ -11,9 +11,9 @@ exec /usr/bin/docker run "$@" \
   --publish 10.36.0.1:143:143 \
   --publish 587:587 \
   --env-file /opt/ccc/etc/postfix/env \
+  --volume /opt/ccc/etc/postfix/dkim:/var/db/dkim:ro \
+  --volume /opt/ccc/etc/postfix/users:/etc/dovecot/users:ro \
   --volume /opt/ccc/etc/ssl/mail.carbon.cc/cert.pem:/etc/ssl/vmail/cert.pem:ro \
   --volume /opt/ccc/etc/ssl/mail.carbon.cc/privkey.pem:/etc/ssl/vmail/key.pem:ro \
-  --volume /opt/ccc/sec/postfix:/etc/dovecot/users:ro \
   --volume /opt/ccc/usr:/home \
-  --volume /opt/ccc/var/postfix/dkim:/var/db/dkim:ro \
   ccc-postfix:latest
