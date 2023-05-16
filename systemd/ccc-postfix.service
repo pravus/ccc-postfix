@@ -1,0 +1,13 @@
+[Unit]
+Description=carbon.cc postfix
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+Restart=always
+ExecStart=/opt/ccc/bin/ccc-postfix-start
+ExecStop=/opt/ccc/bin/ccc-postfix-stop
+
+[Install]
+WantedBy=multi-user.target
