@@ -105,6 +105,11 @@ newaliases
   mkdir -p /run/opendkim
   sed -i -e "s/example.com/${POSTFIX_MYDOMAIN}/" /etc/opendkim/opendkim.conf
   echo "InternalHosts ${POSTFIX_MYNETWORKS}" >>/etc/opendkim/opendkim.conf
+  echo "On-BadSignature reject" >>/etc/opendkim/opendkim.conf
+  echo "On-KeyNotFound reject" >>/etc/opendkim/opendkim.conf
+  echo "On-NoSignature quarantine" >>/etc/opendkim/opendkim.conf
+  echo "On-Security reject" >>/etc/opendkim/opendkim.conf
+  echo "Quarantine true" >>/etc/opendkim/opendkim.conf
   (
     echo "smtpd_milters = inet:127.0.0.1:8891"
     echo "non_smtpd_milters = $smtpd_milters milter_default_action = accept"
