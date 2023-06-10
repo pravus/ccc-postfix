@@ -92,7 +92,7 @@ EOT
     case $(stat -c '%F' "$entry") in
     'directory')
       adduser -h /home/"$entry" -s /sbin/nologin -u "$(stat -c '%u' "$entry")" -G users -D "$entry"
-      echo "${entry}@{$POSTFIX_MYDOMAIN} ${entry}" >> /etc/postfix/senders
+      echo "${entry}@${POSTFIX_MYDOMAIN} ${entry}" >> /etc/postfix/senders
       ;;
     'symbolic link')
       echo "${entry}: "$(readlink "${entry}") >> /etc/postfix/aliases
