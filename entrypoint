@@ -60,7 +60,7 @@ smtpd_sasl_security_options = noanonymous, noplaintext
 smtpd_sasl_tls_security_options = noanonymous
 smtpd_tls_auth_only = yes
 smtpd_relay_restrictions = ${__smtpd_relay_restrictions}
-smtpd_sender_login_maps = /etc/postfix/senders
+smtpd_sender_login_maps = hash:/etc/postfix/senders
 smtpd_sender_restrictions = reject_sender_login_mismatch
 EOT
 unset __smtpd_relay_restrictions
