@@ -129,6 +129,9 @@ postmap /etc/postfix/senders
 
 # spamassassin
 [[ "${WITH_SPAMASSASSIN}" == "true" ]] && {
+  mkdir -p /etc/mail/spamassassin/sa-update-keys
+  chmod 700 /etc/mail/spamassassin/sa-update-keys
+  echo "no-autostart" >> /etc/mail/spamassassin/sa-update-keys/gpg.conf
   /usr/bin/sa-update
   /usr/sbin/spamd --daemonize
 }
