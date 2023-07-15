@@ -89,7 +89,7 @@ postmaster: root
 abuse: root
 EOT
 
-echo "@${POSTFIX_MYDOMAIN} ccc-mail-api" >> /etc/postfix/senders
+[[ -n "${CCC_MAIL_API_USERNAME}" ]] && echo "@${POSTFIX_MYDOMAIN} ${CCC_MAIL_API_USERNAME}" >> /etc/postfix/senders
 (
   cd /home
   find . -maxdepth 1 | while read entry; do
@@ -139,7 +139,7 @@ postmap /etc/postfix/senders
 
 # api
 [[ -z "${CCC_MAIL_API_HOSTNAME}" ]] && export CCC_MAIL_API_HOSTNAME="${HOSTNAME}"
-/usr/sbin/ccc-mail-api &
+[[ -n "${CCC_MAIL_API_USERNAME}" ]] && /usr/sbin/ccc-mail-api &
 
 # let's mail
 exec /usr/sbin/postfix start-fg
