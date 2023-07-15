@@ -89,7 +89,7 @@ postmaster: root
 abuse: root
 EOT
 
-echo "@${POSTFIX_MYDOMAIN} api" >> /etc/postfix/senders
+echo "@${POSTFIX_MYDOMAIN} ccc-mail-api" >> /etc/postfix/senders
 (
   cd /home
   find . -maxdepth 1 | while read entry; do
