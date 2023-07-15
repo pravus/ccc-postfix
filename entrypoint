@@ -136,5 +136,9 @@ postmap /etc/postfix/senders
   /usr/sbin/spamd --daemonize
 }
 
+# api
+[[ -z "${CCC_MAIL_API_HOSTNAME}" ]] && export CCC_MAIL_API_HOSTNAME="${HOSTNAME}"
+/usr/sbin/ccc-mail-api &
+
 # let's mail
 exec /usr/sbin/postfix start-fg

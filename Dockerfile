@@ -1,3 +1,20 @@
+FROM alpine:3 AS ccc-mail-api-builder
+
+RUN apk --no-cache update \
+ && apk --no-cache upgrade \
+ && apk --no-cache add ca-certificates go
+
+COPY src/ccc-mail-api /usr/src/ccc-mail-api/
+
+WORKDIR /usr/src/ccc-mail-api
+
+RUN find .
+
+RUN go test -race ./... \
+ && cd cmd/ccc-mail-api \
+ && CGO_ENABLED=0 go build -ldflags '-extldflags "-static"' -o ccc-mail-api
+
+
 FROM alpine:3 AS procmail-builder
 
 RUN apk --no-cache update \
@@ -20,6 +37,8 @@ FROM alpine:3
 RUN apk --no-cache update \
  && apk --no-cache upgrade \
  && apk --no-cache add ca-certificates dovecot opendkim opendkim-utils postfix spamassassin spamassassin-client
+
+COPY --from=ccc-mail-api-builder /usr/src/ccc-mail-api/cmd/ccc-mail-api/ccc-mail-api /usr/sbin
 
 COPY --from=procmail-builder /usr/src/procmail-3.22/src/formail /usr/sbin
 COPY --from=procmail-builder /usr/src/procmail-3.22/src/mailstat /usr/sbin
