@@ -45,9 +45,13 @@ mailbox_command = /usr/sbin/procmail
 smtp_tls_security_level = may
 EOT
 
-__smtpd_relay_restrictions="permit_sasl_authenticated reject_unauth_destination"
-[[ "${POSTFIX_PERMIT_MYNETWORKS}" == "true" ]] && __smtpd_relay_restrictions="permit_mynetworks ${__smtpd_relay_restrictions}"
-
+__smtpd_relay_restrictions="permit_sasl_authenticated, reject_unauth_destination"
+__smtpd_client_restrictions="permit_sasl_authenticated, check_reverse_client_hostname_access lmdb:/etc/postfix/access"
+__smtpd_sender_restrictions="reject_sender_login_mismatch, check_sender_access lmdb:/etc/postfix/access"
+[[ "${POSTFIX_PERMIT_MYNETWORKS}" == "true" ]] && {
+  __smtpd_relay_restrictions="permit_mynetworks, ${__smtpd_relay_restrictions}"
+  __smtpd_client_restrictions="permit_mynetworks, ${__smtpd_client_restrictions}"
+}
 [[ -d '/etc/ssl/vmail' ]] && cat <<EOT >>/etc/postfix/main.cf
 smtpd_tls_security_level = may
 smtpd_use_tls = yes
@@ -60,10 +64,13 @@ smtpd_sasl_security_options = noanonymous, noplaintext
 smtpd_sasl_tls_security_options = noanonymous
 smtpd_tls_auth_only = yes
 smtpd_relay_restrictions = ${__smtpd_relay_restrictions}
+smtpd_client_restrictions = ${__smtpd_client_restrictions}
 smtpd_sender_login_maps = lmdb:/etc/postfix/senders
-smtpd_sender_restrictions = reject_sender_login_mismatch, check_sender_access lmdb:/etc/postfix/access
+smtpd_sender_restrictions = ${__smtpd_sender_restrictions}
 EOT
 unset __smtpd_relay_restrictions
+unset __smtpd_client_restrictions
+unset __smtpd_sender_restrictions
 [[ -d '/etc/ssl/postfix' ]] && sed -i \
   -e 's/^#\(submission\)/\1/' \
   -e 's/^#\(smtps\)/\1/' \
@@ -81,6 +88,8 @@ unset __smtpd_relay_restrictions
 cat <<EOT >/etc/postfix/access
 shop REJECT
 .shop REJECT
+shopify.com REJECT
+.shopify.com REJECT
 EOT
 
 cat <<EOT >/etc/postfix/aliases
