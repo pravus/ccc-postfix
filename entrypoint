@@ -90,6 +90,8 @@ shop REJECT
 .shop REJECT
 shopify.com REJECT
 .shopify.com REJECT
+stretchoid.com REJECT
+.stretchoid.com REJECT
 EOT
 
 cat <<EOT >/etc/postfix/aliases
