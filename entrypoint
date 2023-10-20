@@ -88,6 +88,8 @@ unset __smtpd_sender_restrictions
 cat <<EOT >/etc/postfix/access
 googleusercontent.com REJECT
 .googleusercontent.com REJECT
+internet-research-project.net REJECT
+.internet-research-project.net REJECT
 linodeusercontent.com REJECT
 .linodeusercontent.com REJECT
 shop REJECT
