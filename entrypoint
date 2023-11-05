@@ -86,6 +86,8 @@ unset __smtpd_sender_restrictions
   /etc/postfix/master.cf
 
 cat <<EOT >/etc/postfix/access
+cyberresilience.io REJECT
+.cyberresilience.io REJECT
 googleusercontent.com REJECT
 .googleusercontent.com REJECT
 internet-research-project.net REJECT
