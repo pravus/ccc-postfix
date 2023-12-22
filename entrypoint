@@ -63,6 +63,8 @@ smtpd_sasl_auth_enable = yes
 smtpd_sasl_security_options = noanonymous, noplaintext
 smtpd_sasl_tls_security_options = noanonymous
 smtpd_tls_auth_only = yes
+smtpd_forbid_unauth_pipelining = yes
+smtpd_data_restrictions = reject_unauth_pipelining
 smtpd_relay_restrictions = ${__smtpd_relay_restrictions}
 smtpd_client_restrictions = ${__smtpd_client_restrictions}
 smtpd_sender_login_maps = lmdb:/etc/postfix/senders
@@ -86,20 +88,10 @@ unset __smtpd_sender_restrictions
   /etc/postfix/master.cf
 
 cat <<EOT >/etc/postfix/access
-cyberresilience.io REJECT
-.cyberresilience.io REJECT
-googleusercontent.com REJECT
-.googleusercontent.com REJECT
-internet-research-project.net REJECT
-.internet-research-project.net REJECT
-linodeusercontent.com REJECT
-.linodeusercontent.com REJECT
 shop REJECT
 .shop REJECT
 shopify.com REJECT
 .shopify.com REJECT
-stretchoid.com REJECT
-.stretchoid.com REJECT
 EOT
 
 cat <<EOT >/etc/postfix/aliases
