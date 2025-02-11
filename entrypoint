@@ -88,6 +88,8 @@ unset __smtpd_sender_restrictions
   /etc/postfix/master.cf
 
 cat <<EOT >/etc/postfix/access
+click REJECT
+.click REJECT
 shop REJECT
 .shop REJECT
 shopify.com REJECT
