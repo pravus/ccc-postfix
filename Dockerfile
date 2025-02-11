@@ -1,4 +1,4 @@
-FROM alpine:3 AS ccc-mail-api-builder
+FROM alpine:3.21 AS ccc-mail-api-builder
 
 RUN apk --no-cache update \
  && apk --no-cache upgrade \
@@ -15,7 +15,7 @@ RUN go test -race ./... \
  && CGO_ENABLED=0 go build -ldflags '-extldflags "-static"' -o ccc-mail-api
 
 
-FROM alpine:3 AS procmail-builder
+FROM alpine:3.21 AS procmail-builder
 
 RUN apk --no-cache update \
  && apk --no-cache upgrade \
@@ -29,10 +29,11 @@ RUN tar xzvf procmail-3.22.tar.gz \
  && cd procmail-3.22 \
  && patch -p1 < ../procmail-3.22-consolidated_fixes-1.patch \
  && patch -p1 < ../procmail-3.22-getline.patch \
+ && sed -i -e 's/^\(CFLAGS0 = -O\)/\1 -fpermissive/' Makefile \
  && make
 
 
-FROM alpine:3
+FROM alpine:3.21
 
 RUN apk --no-cache update \
  && apk --no-cache upgrade \
